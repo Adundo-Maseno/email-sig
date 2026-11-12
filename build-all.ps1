@@ -104,9 +104,6 @@ foreach ($p in $staff) {
 <!--SIG-->
 $($h -join "`n")
 <!--/SIG-->
-<p style="margin-top:28px;font-size:13px;max-width:640px;line-height:1.6;color:#666;">
-<b>To install in Gmail:</b> press Ctrl+A, then Ctrl+C. In Gmail go to Settings (gear) &rarr; See all settings &rarr; General &rarr; Signature &rarr; Create new, and paste (Ctrl+V).
-Set it under <i>Signature defaults</i> and click <i>Save Changes</i>. Alternatively, upload <a href="../$($p.id)/signature-640.png">signature-640.png</a> as an image.</p>
 </body></html>
 "@
   Set-Content (Join-Path $dir 'index.html') $page -Encoding UTF8
