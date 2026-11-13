@@ -36,15 +36,16 @@ $variants = @(
   @{ slug='h100'; H=100; label='100px (Half)' }
 )
 
-function Build-Variant($p, $v) {
+function Build-Variant($p, $v, [bool]$plain = $false) {
   $H = $v.H
-  $sub = if ($v.slug) { "people/$($p.id)/$($v.slug)" } else { "people/$($p.id)" }
+  $base = if ($plain) { "people/$($p.id)/plain" } else { "people/$($p.id)" }
+  $sub = if ($v.slug) { "$base/$($v.slug)" } else { $base }
   $dir = Join-Path $root $sub; $tiles = Join-Path $dir 'tiles'
   if (Test-Path $tiles) { Remove-Item $tiles -Recurse -Force }
   New-Item -ItemType Directory -Force $tiles | Out-Null
 
   $bmp = [System.Drawing.Bitmap]::new(640*$S, $H*$S); $g = New-G $bmp
-  $g.DrawImage($frame, 0, 0, 640*$S, $H*$S)
+  if ($plain) { $g.Clear([System.Drawing.Color]::White) } else { $g.DrawImage($frame, 0, 0, 640*$S, $H*$S) }
 
   $T = { param($text, $px, $style, $color, $x, $y)
     $f = [System.Drawing.Font]::new('Segoe UI', $px*$S, [System.Drawing.FontStyle]$style, [System.Drawing.GraphicsUnit]::Pixel)
@@ -76,7 +77,7 @@ function Build-Variant($p, $v) {
   if ($H -eq 100) {
     # 2-column contacts so text stays crisp at half height
     $np = & $Fit $p.name 16 'Bold' 415;    & $T $p.name  $np 'Bold'    $NAVY $tx (5 + (16-$np)/2)
-    $tp = & $Fit $p.title 11 'Regular' 415; & $T $p.title $tp 'Regular' $GREY $tx (24 + (11-$tp)/2)
+    $tp = & $Fit $p.title 11 'Bold' 415; & $T $p.title $tp 'Bold' $GREY $tx (24 + (11-$tp)/2)
 
     $col1 = $tx; $col2 = 402; $rowH = 18; $ico = 12
     $pairs = @(
@@ -136,7 +137,7 @@ function Build-Variant($p, $v) {
 
     $maxW = 620 - $tx
     $np = & $Fit $p.name $nPx 'Bold' $maxW;     & $T $p.name  $np 'Bold'    $NAVY $tx ($nY + ($nPx-$np)/2)
-    $tp = & $Fit $p.title $tPx 'Regular' $maxW; & $T $p.title $tp 'Regular' $GREY $tx ($tY + ($tPx-$tp)/2)
+    $tp = & $Fit $p.title $tPx 'Bold' $maxW; & $T $p.title $tp 'Bold' $GREY $tx ($tY + ($tPx-$tp)/2)
     foreach ($r in $rows) {
       $g.DrawImage($icon[$r.n], ($tx+2)*$S, ($r.y+2)*$S, $ico*$S, $ico*$S)
       $fp = & $Fit $r.text $rPx 'Regular' ($maxW - $ico - 8)
@@ -183,17 +184,28 @@ $($html -join "`n")
 "@ -Encoding UTF8
 }
 
-$staff = Import-Csv (Join-Path $root 'staff.csv') -Encoding UTF8
+$fs = [System.IO.File]::Open((Join-Path $root 'staff.csv'), 'Open', 'Read', 'ReadWrite')
+$sr = [System.IO.StreamReader]::new($fs, [System.Text.Encoding]::UTF8, $true)
+$csvText = $sr.ReadToEnd().TrimStart([char]0xFEFF)
+$sr.Close(); $fs.Close()
+if ($csvText -match '^"id,""') {
+  $csvText = (($csvText -split "`r?`n") | Where-Object { $_ } | ForEach-Object { ($_ -replace '^"|"$','') -replace '""','"' }) -join "`n"
+}
+$staff = $csvText | ConvertFrom-Csv
 $cards = @()
 foreach ($p in $staff) {
-  $links = @()
+  $framedLinks = @(); $plainLinks = @()
   foreach ($v in $variants) {
-    Build-Variant $p $v
+    Build-Variant $p $v $false
     $href = if ($v.slug) { "people/$($p.id)/$($v.slug)/" } else { "people/$($p.id)/" }
-    $links += "<a href=""$href"" style=""margin-right:12px;color:#1574B4;"">$($v.label)</a>"
+    $framedLinks += "<a href=""$href"" style=""margin-right:12px;color:#1574B4;"">$($v.label)</a>"
+
+    Build-Variant $p $v $true
+    $phref = if ($v.slug) { "people/$($p.id)/plain/$($v.slug)/" } else { "people/$($p.id)/plain/" }
+    $plainLinks += "<a href=""$phref"" style=""margin-right:12px;color:#4CA64F;"">$($v.label)</a>"
   }
-  $cards += "<li style=""margin:0 0 22px;""><strong style=""font-size:16px;color:#1E4D5C;"">$(Esc $p.name)</strong> <span style=""color:#6B7B82;"">- $(Esc $p.title)</span><div style=""margin:6px 0;"">$($links -join '')</div><a href=""people/$($p.id)/h100/""><img src=""people/$($p.id)/h100/signature-640.png"" width=""320"" style=""border:1px solid #eee;""></a></li>"
-  "built: $($p.id) (4 heights)"
+  $cards += "<li style=""margin:0 0 24px;""><strong style=""font-size:16px;color:#0F72AE;"">$(Esc $p.name)</strong> <span style=""color:#111;font-weight:600;"">- $(Esc $p.title)</span><div style=""margin:6px 0 3px;font-size:13px;""><b>Framed:</b> $($framedLinks -join '')</div><div style=""margin:0 0 8px;font-size:13px;""><b>Borderless (White):</b> $($plainLinks -join '')</div><a href=""people/$($p.id)/h100/""><img src=""people/$($p.id)/h100/signature-640.png"" width=""320"" style=""border:1px solid #eee;margin-right:8px;""></a><a href=""people/$($p.id)/plain/h100/""><img src=""people/$($p.id)/plain/h100/signature-640.png"" width=""320"" style=""border:1px solid #eee;""></a></li>"
+  "built: $($p.id) (framed + borderless, 4 heights each)"
 }
 
 Set-Content (Join-Path $root 'index.html') @"
