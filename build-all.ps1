@@ -26,7 +26,7 @@ function Tel($s) { 'tel:' + (($s -split '/')[0] -replace '[^\d+]', '') }
 function Esc($s) { [System.Net.WebUtility]::HtmlEncode($s) }
 
 $logo  = [System.Drawing.Bitmap]::new((Join-Path $assets 'logo.png'))
-$frame = [System.Drawing.Bitmap]::new((Join-Path $assets 'frame.jpg'))
+$frame = [System.Drawing.Bitmap]::new((Join-Path $assets 'frame-white.png'))
 $icon  = @{}; foreach ($n in 'phone','mobile','web','linkedin','location') { $icon[$n] = [System.Drawing.Bitmap]::new((Join-Path $assets "icon-$n.png")) }
 
 $variants = @(
