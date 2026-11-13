@@ -171,8 +171,11 @@ function Build-Variant($p, $v, [bool]$plain = $false) {
   $bmp.Save((Join-Path $dir 'signature.png'), [System.Drawing.Imaging.ImageFormat]::Png)
   $small = [System.Drawing.Bitmap]::new(640, $H); $gs = New-G $small
   $gs.DrawImage($bmp, 0, 0, 640, $H); $gs.Dispose()
-  $small.Save((Join-Path $dir 'signature-640.png'), [System.Drawing.Imaging.ImageFormat]::Png); $small.Dispose()
-  $bmp.Dispose()
+  $small.Save((Join-Path $dir 'signature-640.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+  $pngDir = Join-Path $root 'png'; if (-not (Test-Path $pngDir)) { New-Item -ItemType Directory -Force $pngDir | Out-Null }
+  $styleTag = if ($plain) { 'borderless' } else { 'framed' }
+  $small.Save((Join-Path $pngDir "$($p.id)-$styleTag-${H}px.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+  $small.Dispose(); $bmp.Dispose()
 
   Set-Content (Join-Path $dir 'index.html') @"
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>$(Esc $p.name) - email signature (${H}px)</title></head>
