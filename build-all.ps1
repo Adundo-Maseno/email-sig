@@ -15,6 +15,8 @@ $WEB = @{ text='www.agri-experience.com'; href='https://www.agri-experience.com'
 $LI  = @{ text='linkedin.com/company/agri-experience-ltd'; href='https://www.linkedin.com/company/agri-experience-ltd' }
 $ADDR = @('The Watermark, Spring Court GF,', 'Ndege Road Karen, Nairobi, Kenya')
 $ADDR1 = 'The Watermark, Spring Court GF, Ndege Road Karen, Nairobi, Kenya'
+# Set $CTA = $null to remove the banner later
+$CTA = @{ text='Check out our new website &rarr; www.agri-experience.com'; href='https://www.agri-experience.com'; bg='#4CA64F' }
 
 function C($hex) { [System.Drawing.ColorTranslator]::FromHtml($hex) }
 function New-G($bmp) {
@@ -116,6 +118,7 @@ function Build-Variant($p, $v, [bool]$plain = $false) {
     }
     & $Crop 'bottom' 0 78 640 22
     $html += "<tr><td colspan=""3"" $td>$(& $Img 'bottom' 640 22 $ADDR1)</td></tr>"
+    if ($CTA) { $html += "<tr><td colspan=""3"" bgcolor=""$($CTA.bg)"" style=""background:$($CTA.bg);padding:6px 12px;text-align:center;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;line-height:16px;""><a href=""$($CTA.href)"" style=""color:#ffffff;text-decoration:none;font-weight:bold;display:block;"">$($CTA.text)</a></td></tr>" }
     $html += '</table>'
   } else {
     # Single-column contacts (H = 200, 140, 120)
@@ -165,6 +168,7 @@ function Build-Variant($p, $v, [bool]$plain = $false) {
     }
     & $Crop 'bottom' 0 $addrY 640 ($H-$addrY)
     $html += "<tr><td colspan=""2"" $td>$(& $Img 'bottom' 640 ($H-$addrY) $ADDR1)</td></tr>"
+    if ($CTA) { $html += "<tr><td colspan=""2"" bgcolor=""$($CTA.bg)"" style=""background:$($CTA.bg);padding:6px 12px;text-align:center;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;line-height:16px;""><a href=""$($CTA.href)"" style=""color:#ffffff;text-decoration:none;font-weight:bold;display:block;"">$($CTA.text)</a></td></tr>" }
     $html += '</table>'
   }
 
