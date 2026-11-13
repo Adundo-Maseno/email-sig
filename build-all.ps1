@@ -43,7 +43,7 @@ foreach ($p in $staff) {
   if ($p.mobile) { $rows += @{ n = 'mobile'; text = $p.mobile; href = (Tel $p.mobile) } }
   $rows += @{ n = 'web'; text = $WEB.text; href = $WEB.href }
   $rows += @{ n = 'linkedin'; text = $LI.text; href = $LI.href }
-  $y0 = 74 + (4 - $rows.Count) * 10   # keep block vertically balanced if rows are skipped
+  $y0 = 72 + (4 - $rows.Count) * 12   # keep block vertically balanced and tile heights exact at 0.75x
   for ($i = 0; $i -lt $rows.Count; $i++) { $rows[$i].y = $y0 + 20 * $i }
   $addrY = $y0 + 20 * $rows.Count
 
@@ -79,24 +79,26 @@ foreach ($p in $staff) {
   $gs.DrawImage($bmp, 0, 0, 640, 200); $gs.Dispose()
   $small.Save((Join-Path $dir 'signature-640.png'), [System.Drawing.Imaging.ImageFormat]::Png); $small.Dispose()
 
-  # ---- tiles + clickable HTML ----
+  # ---- tiles + clickable HTML (displayed at 480x150 = 0.75x of 640x200) ----
+  $D = 0.75
   $url = "$BaseUrl" + "people/$($p.id)/tiles/"
   $split = 352
+  $dw = [int](640 * $D); $ds = [int]($split * $D); $dr = $dw - $ds
   $Crop = { param($name, $x, $y, $w, $h)
     $b = $bmp.Clone([System.Drawing.Rectangle]::new($x * $S, $y * $S, $w * $S, $h * $S), $bmp.PixelFormat)
     $b.Save((Join-Path $tiles "$name.png"), [System.Drawing.Imaging.ImageFormat]::Png); $b.Dispose() }
   $Img = { param($file, $w, $h, $alt) "<img src=""$url$file.png"" width=""$w"" height=""$h"" alt=""$(Esc $alt)"" style=""display:block;border:0;width:${w}px;height:${h}px;"">" }
   $td = 'style="padding:0;margin:0;line-height:0;font-size:0;"'
-  $top = $rows[0].y
+  $top = $rows[0].y; $dtop = [int]($top * $D); $drow = [int](20 * $D); $dbot = [int]((200 - $addrY) * $D)
   & $Crop 'top' 0 0 640 $top
-  $h = @("<table cellpadding=""0"" cellspacing=""0"" border=""0"" width=""640"" style=""border-collapse:collapse;width:640px;"">")
-  $h += "<tr><td colspan=""2"" $td><a href=""$($WEB.href)"">$(& $Img 'top' 640 $top "Agri Experience - $($p.name), $($p.title)")</a></td></tr>"
+  $h = @("<table cellpadding=""0"" cellspacing=""0"" border=""0"" width=""$dw"" style=""border-collapse:collapse;width:${dw}px;"">")
+  $h += "<tr><td colspan=""2"" $td><a href=""$($WEB.href)"">$(& $Img 'top' $dw $dtop "Agri Experience - $($p.name), $($p.title)")</a></td></tr>"
   foreach ($r in $rows) {
     & $Crop "$($r.n)-l" 0 $r.y $split 20; & $Crop "$($r.n)-r" $split $r.y (640 - $split) 20
-    $h += "<tr><td width=""$split"" $td>$(& $Img "$($r.n)-l" $split 20 '')</td><td width=""$(640-$split)"" $td><a href=""$($r.href)"">$(& $Img "$($r.n)-r" (640-$split) 20 $r.text)</a></td></tr>"
+    $h += "<tr><td width=""$ds"" $td>$(& $Img "$($r.n)-l" $ds $drow '')</td><td width=""$dr"" $td><a href=""$($r.href)"">$(& $Img "$($r.n)-r" $dr $drow $r.text)</a></td></tr>"
   }
   & $Crop 'bottom' 0 $addrY 640 (200 - $addrY)
-  $h += "<tr><td colspan=""2"" $td>$(& $Img 'bottom' 640 (200-$addrY) ($ADDR -join ' '))</td></tr>"
+  $h += "<tr><td colspan=""2"" $td>$(& $Img 'bottom' $dw $dbot ($ADDR -join ' '))</td></tr>"
   $h += '</table>'
   $page = @"
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>$(Esc $p.name) - email signature</title></head>
