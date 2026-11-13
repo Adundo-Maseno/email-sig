@@ -10,7 +10,7 @@ $root = $PSScriptRoot
 $assets = Join-Path $root 'assets'
 $S = 2   # 2x render scale for sharp text/icons
 
-$GREEN = '#4CA64F'; $BLUE = '#1574B4'; $NAVY = '#1E4D5C'; $GREY = '#6B7B82'; $TEXT = '#1F2A30'
+$GREEN = '#4CA64F'; $BLUE = '#1574B4'; $NAVY = '#0F72AE'; $GREY = '#111111'; $TEXT = '#1F2A30'
 $WEB = @{ text='www.agri-experience.com'; href='https://www.agri-experience.com' }
 $LI  = @{ text='linkedin.com/company/agri-experience-ltd'; href='https://www.linkedin.com/company/agri-experience-ltd' }
 $ADDR = @('The Watermark, Spring Court GF,', 'Ndege Road Karen, Nairobi, Kenya')
